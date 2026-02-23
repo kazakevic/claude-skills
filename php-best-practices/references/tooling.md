@@ -224,6 +224,8 @@ jobs:
 
 ## Deprecations to Fix Before PHP 9
 
+**PHP 8.4 deprecations:**
+
 | Issue | Fix |
 |-------|-----|
 | `function foo(string $x = null)` | `function foo(?string $x = null)` |
@@ -233,5 +235,14 @@ jobs:
 | `$str++` on string var | Use `str_increment($str)` |
 | `@deprecated` docblocks | Use `#[\Deprecated(message: '...')]` |
 | PHPUnit docblock annotations | Run `vendor/bin/rector process` with PHPUnitSetList |
+
+**PHP 8.5 deprecations:**
+
+| Issue | Fix |
+|-------|-----|
+| Backtick operator `` `cmd` `` | `shell_exec('cmd')` |
+| `(boolean)`, `(integer)`, `(double)`, `(binary)` casts | `(bool)`, `(int)`, `(float)`, `(string)` |
+| `null` as array key / in `array_key_exists()` | Use `''` (empty string) |
+| `case X;` (semicolon in switch) | `case X:` (colon) |
 
 Run `vendor/bin/phpstan analyse` with `phpstan-deprecation-rules` to catch all of these automatically.

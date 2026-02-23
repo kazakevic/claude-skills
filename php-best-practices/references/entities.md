@@ -143,6 +143,7 @@ readonly class Money
         if ($this->currency !== $other->currency) {
             throw new \DomainException('Cannot add different currencies.');
         }
+        // PHP 8.5: clone($this, ['amount' => ...]) instead of new self(...)
         return new self($this->amount + $other->amount, $this->currency);
     }
 
