@@ -83,7 +83,7 @@ class Article implements Nameable, Auditable {
     public ?\DateTimeImmutable $updatedAt { get; set; }
 
     public function __construct(string $name) {
-        $this->name      = $name;
+        $this->name = $name;
         $this->createdAt = new \DateTimeImmutable();
         $this->updatedAt = null;
     }
@@ -134,7 +134,7 @@ class Order {
     public protected(set) \DateTimeImmutable $updatedAt;
 
     public function confirm(): void {
-        $this->status    = Status::Confirmed; // ✅ inside class
+        $this->status = Status::Confirmed; // ✅ inside class
         $this->updatedAt = new \DateTimeImmutable();
     }
 }

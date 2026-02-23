@@ -64,7 +64,7 @@ the long-standing pain of cloning `readonly` classes.
 // PHP 8.4 — verbose wither pattern
 readonly class Money {
     public function __construct(
-        public int      $amount,
+        public int $amount,
         public Currency $currency,
     ) {}
 
@@ -77,7 +77,7 @@ readonly class Money {
 // PHP 8.5 — clone with
 readonly class Money {
     public function __construct(
-        public int      $amount,
+        public int $amount,
         public Currency $currency,
     ) {}
 

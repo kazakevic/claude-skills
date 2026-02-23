@@ -21,7 +21,7 @@ class User {
     private string $name;
     private string $email;
     public function __construct(string $name, string $email) {
-        $this->name  = $name;
+        $this->name = $name;
         $this->email = $email;
     }
 }
@@ -64,9 +64,9 @@ $label = match($status) {
 
 // Multiple arms
 $group = match(true) {
-    $age < 18  => 'minor',
-    $age < 65  => 'adult',
-    default    => 'senior',
+    $age < 18 => 'minor',
+    $age < 65 => 'adult',
+    default   => 'senior',
 };
 ```
 
@@ -243,3 +243,230 @@ class FakeClock implements ClockInterface {
 ```
 
 Never call `new \DateTime()` or `time()` directly in business logic.
+
+---
+
+## PHP 7.x Foundation Features
+
+These are still everyday syntax — know them cold.
+
+### Null Coalescing Operator `??` (7.0)
+
+Returns the left side if it exists and is not `null`, otherwise the right side.
+No notice on undefined array keys or variables.
+
+```php
+// Old
+$name = isset($data['name']) ? $data['name'] : 'Anonymous';
+
+// Modern
+$name = $data['name'] ?? 'Anonymous';
+
+// Chains
+$city = $user['address']['city'] ?? $defaults['city'] ?? 'Unknown';
+
+// Works on method calls too
+$locale = $user->getPreferences()?->locale ?? 'en';
+```
+
+### Null Coalescing Assignment `??=` (7.4)
+
+Assign only if the left side is null or undefined.
+
+```php
+// Old
+$config['timeout'] = $config['timeout'] ?? 30;
+
+// Modern
+$config['timeout'] ??= 30;
+
+// Common use: lazy-initialise cache
+$this->cache[$key] ??= $this->computeExpensiveValue($key);
+```
+
+### Spaceship Operator `<=>` (7.0)
+
+Returns -1, 0, or 1. Purpose-built for sorting callbacks.
+
+```php
+// Old
+usort($users, function($a, $b) {
+    if ($a->age === $b->age) return 0;
+    return $a->age < $b->age ? -1 : 1;
+});
+
+// Modern
+usort($users, fn($a, $b) => $a->age <=> $b->age);
+
+// Multi-field sort
+usort($products, fn($a, $b) =>
+    [$a->category, $a->price] <=> [$b->category, $b->price]
+);
+```
+
+### Scalar Type Declarations (7.0)
+
+```php
+function add(int $a, int $b): int {
+    return $a + $b;
+}
+
+function slugify(string $text): string {
+    return strtolower(str_replace(' ', '-', trim($text)));
+}
+```
+
+Always pair with `declare(strict_types=1)` — without it, PHP silently coerces
+`"3"` to `3` and you lose the benefit.
+
+### Nullable Types `?Type` (7.1)
+
+```php
+function findUser(int $id): ?User {
+    return $this->repository->find($id); // User or null
+}
+
+function setDeadline(?DateTimeImmutable $deadline): void {
+    $this->deadline = $deadline;
+}
+```
+
+Equivalent to `Type|null` — both forms are valid in 8.x.
+
+### Void Return Type (7.1)
+
+```php
+public function save(Order $order): void {
+    $this->em->persist($order);
+    $this->em->flush();
+    // no return value — returning null is still allowed
+}
+```
+
+### Typed Properties (7.4)
+
+Declare a type on class properties directly — no docblock needed.
+
+```php
+class User {
+    public int $id;
+    public string $name;
+    public ?string $bio = null;
+    private DateTimeImmutable $createdAt;
+    protected array $roles = [];
+}
+```
+
+Accessing an uninitialized typed property throws `Error`. Always initialise in
+the constructor or with a default value.
+
+### Arrow Functions `fn` (7.4)
+
+Single-expression closures that auto-capture outer scope by value.
+
+```php
+// Old closure — must explicitly use()
+$multiplier = 3;
+$triple = array_map(function($n) use ($multiplier) {
+    return $n * $multiplier;
+}, $numbers);
+
+// Arrow function — captures $multiplier automatically
+$triple = array_map(fn($n) => $n * $multiplier, $numbers);
+
+// Common patterns
+$activeUsers  = array_filter($users, fn($u) => $u->isActive());
+$names        = array_map(fn($u) => $u->name, $users);
+$total        = array_reduce($items, fn($carry, $i) => $carry + $i->price, 0);
+```
+
+Arrow functions are read-only captures — they cannot mutate the outer variable.
+Use a regular closure with `use (&$var)` when you need mutation.
+
+### Spread Operator in Arrays (7.4) / String Keys (8.1)
+
+```php
+$defaults = ['timeout' => 30, 'retries' => 3];
+$override = ['timeout' => 60];
+
+// Merge — later keys win
+$config = [...$defaults, ...$override];
+// ['timeout' => 60, 'retries' => 3]
+
+// Build arrays without array_merge
+$base  = [1, 2, 3];
+$extra = [4, 5];
+$all   = [...$base, ...$extra, 6]; // [1, 2, 3, 4, 5, 6]
+
+// String key spread (8.1+) replaces array_merge for named keys
+$merged = [...$defaults, ...$override]; // works with string keys in 8.1+
+```
+
+### Anonymous Classes (7.0)
+
+Useful for one-off interface implementations, especially in tests.
+
+```php
+// Quick fake without a separate file
+$logger = new class implements LoggerInterface {
+    public array $logs = [];
+    public function log(mixed $level, string $message, array $context = []): void {
+        $this->logs[] = [$level, $message];
+    }
+};
+
+$service = new MyService($logger);
+$service->doSomething();
+assert(count($logger->logs) === 1);
+```
+
+### Named Arguments + Spread Together
+
+```php
+function createUser(string $name, string $email, int $age = 0): User { ... }
+
+$data = ['email' => 'a@b.com', 'name' => 'Alice'];
+$user = createUser(...$data); // spread associative array as named args
+```
+
+### `list()` / Short Destructuring (7.1)
+
+```php
+// Positional
+[$first, $second, $third] = $array;
+[, , $third] = $array; // skip elements
+
+// Key-based destructuring
+['name' => $name, 'email' => $email] = $userData;
+
+// In foreach
+foreach ($points as [$x, $y]) {
+    echo "$x, $y";
+}
+
+foreach ($rows as ['id' => $id, 'label' => $label]) {
+    echo "$id: $label";
+}
+```
+
+### Class Constant Visibility (7.1)
+
+```php
+class HttpStatus {
+    public const int OK = 200;
+    public const int CREATED = 201;
+    protected const int SERVER_ERROR = 500;
+    private const string VERSION = '1.1';
+}
+```
+
+### `array_key_first()` / `array_key_last()` (7.3)
+
+```php
+$map = ['a' => 1, 'b' => 2, 'c' => 3];
+
+array_key_first($map); // 'a'
+array_key_last($map);  // 'c'
+
+// Safe — does not modify internal array pointer (unlike reset()/end())
+```

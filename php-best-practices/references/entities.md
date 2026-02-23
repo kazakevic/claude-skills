@@ -16,9 +16,9 @@ final class Table {
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
 final class Column {
     public function __construct(
-        public readonly string  $name,
-        public readonly string  $type     = 'VARCHAR(255)',
-        public readonly bool    $nullable = false,
+        public readonly string $name,
+        public readonly string $type = 'VARCHAR(255)',
+        public readonly bool $nullable = false,
     ) {}
 }
 
@@ -34,16 +34,16 @@ final class Id {}
 
 ```php
 function getTableName(string $class): string {
-    $ref   = new \ReflectionClass($class);
-    $attrs = $ref->getAttributes(Table::class);
-    if (empty($attrs)) throw new \RuntimeException("No #[Table] on $class");
-    return $attrs[0]->newInstance()->name;
+    $reflection = new \ReflectionClass($class);
+    $attributes = $reflection->getAttributes(Table::class);
+    if (empty($attributes)) throw new \RuntimeException("No #[Table] on $class");
+    return $attributes[0]->newInstance()->name;
 }
 
 function getColumnMap(string $class): array {
-    $ref     = new \ReflectionClass($class);
+    $reflection = new \ReflectionClass($class);
     $columns = [];
-    foreach ($ref->getProperties() as $prop) {
+    foreach ($reflection->getProperties() as $prop) {
         $attrs = $prop->getAttributes(Column::class);
         if ($attrs) $columns[$prop->getName()] = $attrs[0]->newInstance();
     }
@@ -84,7 +84,7 @@ class Order
         if ($this->status !== OrderStatus::Draft) {
             throw new \DomainException('Cannot modify a confirmed order.');
         }
-        $this->items[]   = new OrderItem($product, $quantity);
+        $this->items[] = new OrderItem($product, $quantity);
         $this->updatedAt = new \DateTimeImmutable();
     }
 
@@ -93,7 +93,7 @@ class Order
         if (empty($this->items)) {
             throw new \DomainException('Cannot confirm an empty order.');
         }
-        $this->status    = OrderStatus::Confirmed;
+        $this->status = OrderStatus::Confirmed;
         $this->updatedAt = new \DateTimeImmutable();
     }
 
@@ -111,9 +111,9 @@ class Order
 }
 
 enum OrderStatus: string {
-    case Draft     = 'draft';
+    case Draft = 'draft';
     case Confirmed = 'confirmed';
-    case Shipped   = 'shipped';
+    case Shipped = 'shipped';
     case Cancelled = 'cancelled';
 }
 ```
@@ -132,7 +132,7 @@ declare(strict_types=1);
 readonly class Money
 {
     public function __construct(
-        public int      $amount,   // in cents/minor unit
+        public int $amount,   // in cents/minor unit
         public Currency $currency,
     ) {
         if ($amount < 0) throw new \InvalidArgumentException('Negative amount.');
@@ -211,8 +211,8 @@ readonly class OrderConfirmed implements DomainEvent {
     public \DateTimeImmutable $occurredAt { get; }
 
     public function __construct(
-        public int   $orderId,
-        public int   $customerId,
+        public int $orderId,
+        public int $customerId,
         public Money $total,
     ) {
         $this->occurredAt = new \DateTimeImmutable();
@@ -301,10 +301,10 @@ class Product
 
     public function __construct(string $name, int $priceCents, Currency $currency)
     {
-        $this->name       = $name;
+        $this->name = $name;
         $this->priceCents = $priceCents;
-        $this->currency   = $currency;
-        $this->createdAt  = new \DateTimeImmutable();
+        $this->currency = $currency;
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     public function price(): Money

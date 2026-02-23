@@ -49,10 +49,10 @@ class Product
 
     public function __construct(string $name, int $priceCents, Currency $currency)
     {
-        $this->name       = $name;
+        $this->name = $name;
         $this->priceCents = $priceCents;
-        $this->currency   = $currency;
-        $this->createdAt  = new \DateTimeImmutable();
+        $this->currency = $currency;
+        $this->createdAt = new \DateTimeImmutable();
     }
 
     // Getters — Doctrine needs private properties to be accessible
@@ -66,7 +66,7 @@ class Product
     // Domain logic
     public function rename(string $name): void {
         if (strlen($name) < 1) throw new \InvalidArgumentException('Name empty.');
-        $this->name      = trim($name);
+        $this->name = trim($name);
         $this->updatedAt = new \DateTimeImmutable();
     }
 
@@ -112,7 +112,7 @@ class Order
     public function __construct(int $customerId)
     {
         $this->customerId = $customerId;
-        $this->items      = new \Doctrine\Common\Collections\ArrayCollection();
+        $this->items = new \Doctrine\Common\Collections\ArrayCollection();
     }
 
     public function addItem(OrderItem $item): void
